@@ -16,8 +16,9 @@ export default function TeacherReports() {
 
   const loadSessions = async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await axios.get(
-        `http://localhost:8000/reports/teacher/${user?.id}/sessions`,
+        `${API_URL}/reports/teacher/${user?.id}/sessions`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSessions(response.data.sessions);
@@ -30,8 +31,9 @@ export default function TeacherReports() {
 
   const loadSessionDetail = async (sessionId: string) => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await axios.get(
-        `http://localhost:8000/reports/session/${sessionId}`,
+        `${API_URL}/reports/session/${sessionId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSelectedSession(response.data);

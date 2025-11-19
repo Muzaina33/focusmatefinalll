@@ -14,8 +14,9 @@ export default function LockModeToggle({ sessionId }: Props) {
   const toggle = async () => {
     const newState = !enabled;
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       await axios.put(
-        `http://localhost:8000/room/${sessionId}/lockmode?enabled=${newState}`,
+        `${API_URL}/room/${sessionId}/lockmode?enabled=${newState}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

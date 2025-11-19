@@ -68,7 +68,8 @@ export default function StudentClassroom() {
       setLocalStream(stream);
 
       // Join room
-      const response = await axios.post('http://localhost:8000/room/join', 
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await axios.post(`${API_URL}/room/join`, 
         { room_code: roomCode },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -93,7 +94,8 @@ export default function StudentClassroom() {
   const leaveClass = async () => {
     if (session) {
       try {
-        await axios.post(`http://localhost:8000/room/leave?room_id=${session.id}`, {}, {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        await axios.post(`${API_URL}/room/leave?room_id=${session.id}`, {}, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

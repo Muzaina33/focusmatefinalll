@@ -50,8 +50,10 @@ export default function TeacherDashboard() {
 
   const createSession = async () => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      
       // Create room first (without camera)
-      const response = await axios.post('http://localhost:8000/room/create', {}, {
+      const response = await axios.post(`${API_URL}/room/create`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -84,7 +86,8 @@ export default function TeacherDashboard() {
   const loadStudents = async () => {
     if (!session) return;
     try {
-      const response = await axios.get(`http://localhost:8000/room/${session.id}/students`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await axios.get(`${API_URL}/room/${session.id}/students`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStudents(response.data.students);
@@ -96,7 +99,8 @@ export default function TeacherDashboard() {
   const endSession = async () => {
     if (!session) return;
     try {
-      await axios.delete(`http://localhost:8000/room/${session.id}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      await axios.delete(`${API_URL}/room/${session.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
