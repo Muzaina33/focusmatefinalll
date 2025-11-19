@@ -69,6 +69,11 @@ export default function StudentClassroom() {
       const stream = await webrtcManager.getLocalStream(true, true);
       setLocalStream(stream);
 
+      // Set video source
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
       // Join room
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await axios.post(`${API_URL}/room/join`, 
@@ -197,33 +202,24 @@ export default function StudentClassroom() {
           <div className="glass rounded-xl p-4">
             <h3 className="text-lg font-bold text-white mb-2">My Camera</h3>
             <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden">
-              {localStream ? (
-                <video
-                  key="student-video"
-                  ref={(video) => {
-                    if (video && localStream) {
-                      video.srcObject = localStream;
-                      video.play().catch(e => console.log('Video play error:', e));
-                      // Store ref for AI detection
-                      if (videoRef) {
-                        (videoRef as any).current = video;
-                      }
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+                style={{ transform: 'scaleX(-1)', display: localStream ? 'block' : 'none' }}
+              />
+              {!localStream && (
+                <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">👤</div>
                 </div>
               )}
-              <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-green-400">
-                ● AI Monitoring Active
-              </div>
+              {localStream && (
+                <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-green-400">
+                  ● AI Monitoring Active
+                </div>
+              )}
             </div>
           </div>
 

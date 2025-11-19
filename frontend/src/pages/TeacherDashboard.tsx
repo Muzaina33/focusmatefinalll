@@ -256,23 +256,20 @@ export default function TeacherDashboard() {
               </div>
             </div>
             <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden">
-              {localStream ? (
-                <video
-                  key="teacher-video"
-                  ref={(video) => {
-                    if (video && localStream) {
-                      video.srcObject = localStream;
-                      video.play().catch(e => console.log('Video play error:', e));
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
+              <video
+                autoPlay
+                playsInline
+                muted
+                ref={(video) => {
+                  if (video && localStream && video.srcObject !== localStream) {
+                    video.srcObject = localStream;
+                  }
+                }}
+                className="w-full h-full object-cover"
+                style={{ transform: 'scaleX(-1)', display: localStream ? 'block' : 'none' }}
+              />
+              {!localStream && (
+                <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-6xl">👨‍🏫</div>
                 </div>
               )}
