@@ -16,16 +16,20 @@ export default function TeacherDashboard() {
   const [activities, setActivities] = useState<any[]>([]);
 
   useEffect(() => {
-    if (token) {
+    if (token && session) {
       const socket = websocketService.connect(token);
       
       socket.on('student_joined', (data: any) => {
+        console.log('Student joined:', data);
         setActivities(prev => [...prev, { type: 'joined', ...data, time: new Date() }]);
+        // Reload students list
         loadStudents();
       });
 
       socket.on('student_left', (data: any) => {
+        console.log('Student left:', data);
         setActivities(prev => [...prev, { type: 'left', ...data, time: new Date() }]);
+        // Reload students list
         loadStudents();
       });
 
@@ -46,7 +50,7 @@ export default function TeacherDashboard() {
       websocketService.disconnect();
       webrtcManager.cleanup();
     };
-  }, [token]);
+  }, [token, session]);
 
   const createSession = async () => {
     try {
@@ -90,11 +94,22 @@ export default function TeacherDashboard() {
       const response = await axios.get(`${API_URL}/room/${session.id}/students`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('Loaded students:', response.data.students);
       setStudents(response.data.students);
     } catch (error) {
       console.error('Error loading students:', error);
     }
   };
+
+  // Load students when session changes
+  useEffect(() => {
+    if (session) {
+      loadStudents();
+      // Poll for students every 5 seconds as backup
+      const interval = setInterval(loadStudents, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [session]);
 
   const endSession = async () => {
     if (!session) return;
