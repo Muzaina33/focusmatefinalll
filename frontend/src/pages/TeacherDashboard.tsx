@@ -223,6 +223,7 @@ export default function TeacherDashboard() {
               autoPlay
               muted
               className="w-full rounded-lg bg-dark-panel"
+              style={{ transform: 'scaleX(-1)' }}
             />
           </div>
 
