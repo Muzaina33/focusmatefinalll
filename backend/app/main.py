@@ -15,14 +15,25 @@ allowed_origins = [FRONTEND_URL]
 # Add localhost for development
 if "localhost" not in FRONTEND_URL:
     allowed_origins.append("http://localhost:5173")
+    allowed_origins.append("http://localhost:3000")
 
-# CORS middleware
+# Add Vercel deployments support (all subdomains)
+if "vercel.app" in FRONTEND_URL:
+    # Allow all Vercel preview deployments
+    allowed_origins.append("https://*.vercel.app")
+
+print(f"🌐 CORS allowed origins: {allowed_origins}")
+print(f"🔑 Frontend URL: {FRONTEND_URL}")
+
+# CORS middleware with wildcard support for Vercel
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app" if "vercel.app" in FRONTEND_URL else None,
+    allow_origins=allowed_origins if "vercel.app" not in FRONTEND_URL else [],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
