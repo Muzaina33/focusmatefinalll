@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #0a0a0f;
+      color: white;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00e6ff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .status {
+      text-align: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    #lockmode-status {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .info {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">FocusMate</div>
+  <div class="status">
+    <span id="lockmode-status">LockMode: OFF</span>
+  </div>
+  <div class="info">
+    LockMode is controlled by your teacher
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
