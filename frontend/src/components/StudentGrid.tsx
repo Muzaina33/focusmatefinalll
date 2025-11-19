@@ -10,9 +10,10 @@ interface Student {
 interface Props {
   students: Student[];
   sessionId: string;
+  studentFrames?: Record<string, string>;
 }
 
-export default function StudentGrid({ students, sessionId }: Props) {
+export default function StudentGrid({ students, sessionId, studentFrames = {} }: Props) {
   const getGridClass = () => {
     const count = students.length;
     if (count === 0) return 'grid-cols-1';
@@ -38,7 +39,12 @@ export default function StudentGrid({ students, sessionId }: Props) {
       </h3>
       <div className={`grid ${getGridClass()} gap-4`}>
         {students.map((student) => (
-          <StudentTile key={student.id} student={student} sessionId={sessionId} />
+          <StudentTile 
+            key={student.id} 
+            student={student} 
+            sessionId={sessionId}
+            videoFrame={studentFrames[student.id]}
+          />
         ))}
       </div>
     </div>

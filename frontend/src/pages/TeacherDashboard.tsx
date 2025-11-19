@@ -14,6 +14,7 @@ export default function TeacherDashboard() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
+  const [studentFrames, setStudentFrames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (token && session) {
@@ -34,11 +35,20 @@ export default function TeacherDashboard() {
       });
 
       socket.on('attention_update', (data: any) => {
+        console.log('Attention update received:', data);
         setStudents(prev => prev.map(s => 
           s.id === data.student_id 
             ? { ...s, attentionScore: data.attention_score, status: data.status }
             : s
         ));
+        
+        // Update video frame if provided
+        if (data.video_frame) {
+          setStudentFrames(prev => ({
+            ...prev,
+            [data.student_id]: data.video_frame
+          }));
+        }
       });
 
       socket.on('tab_switch_event', (data: any) => {
@@ -270,7 +280,7 @@ export default function TeacherDashboard() {
           </div>
 
           {/* Student Grid */}
-          <StudentGrid students={students} sessionId={session.id} />
+          <StudentGrid students={students} sessionId={session.id} studentFrames={studentFrames} />
 
           {/* Analytics */}
           <SessionAnalytics students={students} />
