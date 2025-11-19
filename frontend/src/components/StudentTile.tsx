@@ -3,9 +3,10 @@ import { websocketService } from '../services/websocket';
 interface Props {
   student: any;
   sessionId: string;
+  videoFrame?: string;
 }
 
-export default function StudentTile({ student, sessionId }: Props) {
+export default function StudentTile({ student, sessionId, videoFrame }: Props) {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'Engaged': return 'text-green-400';
@@ -43,9 +44,14 @@ export default function StudentTile({ student, sessionId }: Props) {
 
   return (
     <div className="glass rounded-lg p-4 hover:border-neon-cyan transition-all">
-      {/* Video placeholder */}
-      <div className="aspect-video bg-dark-panel rounded-lg mb-3 flex items-center justify-center">
-        <div className="text-4xl">👤</div>
+      {/* Video display */}
+      <div className="relative aspect-video bg-dark-panel rounded-lg mb-3 overflow-hidden">
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="text-4xl">👤</div>
+        </div>
+        <div className="absolute bottom-1 left-1 text-xs text-gray-400 bg-black/70 px-2 py-0.5 rounded">
+          {student.name}
+        </div>
       </div>
 
       {/* Student Info */}

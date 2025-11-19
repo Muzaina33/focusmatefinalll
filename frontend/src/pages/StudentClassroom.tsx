@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { websocketService } from '../services/websocket';
 import { webrtcManager } from '../services/webrtc';
+import { aiDetectionService } from '../services/aiDetection';
 import axios from 'axios';
 import AttentionPanel from '../components/AttentionPanel';
 import BottomToolbar from '../components/BottomToolbar';
@@ -15,6 +16,7 @@ export default function StudentClassroom() {
   const [lockMode, setLockMode] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (token && session) {
@@ -86,6 +88,30 @@ export default function StudentClassroom() {
 
       // Join session via WebSocket
       websocketService.emit('join_session', { session_id: sessionId });
+
+      // Start AI detection after video is ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          aiDetectionService.initialize(videoRef.current);
+          aiDetectionService.startDetection((data) => {
+            // Update local attention display
+            setMyAttention(prev => ({
+              score: data.score,
+              status: data.status,
+              history: [...prev.history, { time: new Date(), score: data.score }].slice(-30)
+            }));
+
+            // Send to teacher via WebSocket
+            websocketService.emit('ai_update', {
+              session_id: sessionId,
+              student_id: user!.id,
+              attention_score: data.score,
+              status: data.status,
+              video_frame: data.frame // Send video frame to teacher
+            });
+          });
+        }
+      }, 1000);
     } catch (error: any) {
       alert(error.response?.data?.detail || 'Failed to join room');
     }
@@ -105,6 +131,7 @@ export default function StudentClassroom() {
       }
     }
     
+    aiDetectionService.cleanup();
     webrtcManager.cleanup();
     setSession(null);
     setLocalStream(null);
@@ -169,25 +196,45 @@ export default function StudentClassroom() {
           {/* My Camera */}
           <div className="glass rounded-xl p-4">
             <h3 className="text-lg font-bold text-white mb-2">My Camera</h3>
-            <video
-              ref={(video) => {
-                if (video && localStream) {
-                  video.srcObject = localStream;
-                  video.play();
-                }
-              }}
-              autoPlay
-              muted
-              className="w-full rounded-lg bg-dark-panel"
-              style={{ transform: 'scaleX(-1)' }}
-            />
+            <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden">
+              {localStream ? (
+                <video
+                  key="student-video"
+                  ref={(video) => {
+                    if (video && localStream) {
+                      video.srcObject = localStream;
+                      video.play().catch(e => console.log('Video play error:', e));
+                      // Store ref for AI detection
+                      if (videoRef) {
+                        (videoRef as any).current = video;
+                      }
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-6xl">👤</div>
+                </div>
+              )}
+              <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-green-400">
+                ● AI Monitoring Active
+              </div>
+            </div>
           </div>
 
-          {/* Teacher Camera Placeholder */}
+          {/* Teacher Camera */}
           <div className="glass rounded-xl p-4">
             <h3 className="text-lg font-bold text-white mb-2">Teacher</h3>
-            <div className="aspect-video bg-dark-panel rounded-lg flex items-center justify-center">
+            <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden flex items-center justify-center">
               <div className="text-6xl">👨‍🏫</div>
+              <div className="absolute bottom-2 left-2 text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
+                Video streaming requires TURN server
+              </div>
             </div>
           </div>
         </div>

@@ -210,21 +210,63 @@ export default function TeacherDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Main Content */}
         <div className="lg:col-span-3 space-y-4">
-          {/* Teacher Preview */}
+          {/* Teacher Preview with Controls */}
           <div className="glass rounded-xl p-4">
-            <h3 className="text-lg font-bold text-white mb-2">Your Camera</h3>
-            <video
-              ref={(video) => {
-                if (video && localStream) {
-                  video.srcObject = localStream;
-                  video.play();
-                }
-              }}
-              autoPlay
-              muted
-              className="w-full rounded-lg bg-dark-panel"
-              style={{ transform: 'scaleX(-1)' }}
-            />
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-bold text-white">Your Camera</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (localStream) {
+                      const videoTrack = localStream.getVideoTracks()[0];
+                      if (videoTrack) {
+                        videoTrack.enabled = !videoTrack.enabled;
+                      }
+                    }
+                  }}
+                  className="px-3 py-1 bg-dark-panel hover:bg-gray-700 rounded text-sm"
+                  title="Toggle camera"
+                >
+                  📹
+                </button>
+                <button
+                  onClick={() => {
+                    if (localStream) {
+                      const audioTrack = localStream.getAudioTracks()[0];
+                      if (audioTrack) {
+                        audioTrack.enabled = !audioTrack.enabled;
+                      }
+                    }
+                  }}
+                  className="px-3 py-1 bg-dark-panel hover:bg-gray-700 rounded text-sm"
+                  title="Toggle microphone"
+                >
+                  🎤
+                </button>
+              </div>
+            </div>
+            <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden">
+              {localStream ? (
+                <video
+                  key="teacher-video"
+                  ref={(video) => {
+                    if (video && localStream) {
+                      video.srcObject = localStream;
+                      video.play().catch(e => console.log('Video play error:', e));
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-6xl">👨‍🏫</div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Student Grid */}
