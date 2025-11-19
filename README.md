@@ -235,28 +235,30 @@ focusmate/
 
 ## 🌐 Public Deployment
 
-### Deploy to Railway (Recommended)
+### ⭐ Ngrok - Free & Fast (Recommended)
 
-For testing across devices (laptop + mobile), deploy to Railway:
+**Perfect for testing across devices (laptop + mobile)**
+
+- ✅ **100% FREE** - No credit card needed
+- ✅ **5 minutes** setup time
+- ✅ **HTTPS included** - Camera access works
+- ✅ **No account required** (optional for better features)
+
+**Quick Start:**
+1. Download ngrok: https://ngrok.com/download
+2. Follow: **`START_HERE_NGROK.md`**
+3. Detailed guide: **`NGROK_SETUP_GUIDE.md`**
+4. Visual steps: **`NGROK_VISUAL_STEPS.md`**
+
+### Alternative: Railway
+
+For permanent deployment (requires account):
 
 1. **Quick Start**: Follow `QUICK_START_DEPLOYMENT.md`
 2. **Detailed Guide**: See `DEPLOYMENT_GUIDE.md`
 3. **Checklist**: Use `DEPLOYMENT_CHECKLIST.md`
 
-**Deployment time**: ~15 minutes
-**Cost**: Free tier available
-
-### Alternative: Ngrok (Quick Testing)
-
-For immediate testing without deployment:
-
-```bash
-# Install ngrok from https://ngrok.com/download
-ngrok http 8000  # Backend
-ngrok http 5173  # Frontend
-```
-
-See `QUICK_START_DEPLOYMENT.md` for detailed instructions.
+**Note**: Railway free tier has limits and may require payment.
 
 ## 🐳 Docker Deployment (Local)
 

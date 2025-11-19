@@ -5,7 +5,31 @@ Deploy FocusMate publicly so you can test with:
 - **Laptop** → Teacher role
 - **Mobile** → Student role
 
-## Fastest Method: Railway (15 minutes)
+## ⭐ Recommended: Ngrok (5 minutes, 100% FREE!)
+
+**Best for**: Immediate testing, no credit card needed, completely free
+
+See detailed guide: **`NGROK_SETUP_GUIDE.md`** or **`NGROK_VISUAL_STEPS.md`**
+
+### Quick Ngrok Setup
+
+1. Download ngrok: https://ngrok.com/download
+2. Extract to `C:\ngrok`
+3. Open 4 terminals and run:
+   - Terminal 1: `cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000`
+   - Terminal 2: `cd frontend && npm run dev -- --host`
+   - Terminal 3: `ngrok http 8000` (copy the HTTPS URL)
+   - Terminal 4: `ngrok http 5173` (copy the HTTPS URL)
+4. Create `frontend/.env` with backend ngrok URL
+5. Create `backend/.env` with frontend ngrok URL
+6. Restart backend and frontend
+7. Access frontend URL on both devices!
+
+**Full instructions**: Open `NGROK_SETUP_GUIDE.md`
+
+---
+
+## Alternative: Railway (15 minutes, requires account)
 
 ### Step 1: Prepare Your Code (2 minutes)
 
