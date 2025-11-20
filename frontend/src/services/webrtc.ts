@@ -15,8 +15,13 @@ class WebRTCManager {
 
   private iceServers = {
     iceServers: [
+      // STUN servers
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' },
+      // TURN servers (no account needed)
+      { urls: 'turn:relay.metered.ca:80' },
+      { urls: 'turn:relay.metered.ca:443' },
+      { urls: 'turn:relay.metered.ca:443?transport=tcp' },
     ],
   };
 
@@ -64,10 +69,27 @@ class WebRTCManager {
       }
     };
 
+    // Handle incoming remote stream
+    pc.ontrack = (event) => {
+      console.log(`Received remote stream from ${peerId}`);
+      const [remoteStream] = event.streams;
+      const peerConnection = this.peerConnections.get(peerId);
+      if (peerConnection) {
+        peerConnection.stream = remoteStream;
+        // Trigger custom event for UI updates
+        window.dispatchEvent(new CustomEvent('remoteStreamReceived', {
+          detail: { peerId, stream: remoteStream }
+        }));
+      }
+    };
+
     // Handle connection state changes
     pc.onconnectionstatechange = () => {
       console.log(`Connection state with ${peerId}:`, pc.connectionState);
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      if (pc.connectionState === 'connected') {
+        console.log(`✅ WebRTC connection established with ${peerId}`);
+      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+        console.log(`❌ WebRTC connection failed with ${peerId}`);
         this.removePeerConnection(peerId);
       }
     };
@@ -131,34 +153,55 @@ class WebRTCManager {
     if (!this.socket) return;
 
     this.socket.on('webrtc_offer', async (data: any) => {
+      console.log(`📞 Received WebRTC offer from ${data.from_id}`);
       await this.handleOffer(data.from_id, data.offer);
     });
 
     this.socket.on('webrtc_answer', async (data: any) => {
+      console.log(`📞 Received WebRTC answer from ${data.from_id}`);
       await this.handleAnswer(data.from_id, data.answer);
     });
 
     this.socket.on('webrtc_ice_candidate', async (data: any) => {
+      console.log(`🧊 Received ICE candidate from ${data.from_id}`);
       await this.handleIceCandidate(data.from_id, data.candidate);
     });
   }
 
   getRemoteStream(peerId: string): MediaStream | null {
     const peerConnection = this.peerConnections.get(peerId);
-    if (!peerConnection) return null;
+    if (!peerConnection) {
+      console.log(`No peer connection found for ${peerId}`);
+      return null;
+    }
 
+    // Return cached stream if available
+    if (peerConnection.stream) {
+      return peerConnection.stream;
+    }
+
+    // Try to construct stream from receivers
     const pc = peerConnection.connection;
     const receivers = pc.getReceivers();
-    const stream = new MediaStream();
     
+    if (receivers.length === 0) {
+      console.log(`No receivers found for ${peerId}`);
+      return null;
+    }
+
+    const stream = new MediaStream();
     receivers.forEach((receiver) => {
-      if (receiver.track) {
+      if (receiver.track && receiver.track.readyState === 'live') {
         stream.addTrack(receiver.track);
       }
     });
 
-    peerConnection.stream = stream;
-    return stream;
+    if (stream.getTracks().length > 0) {
+      peerConnection.stream = stream;
+      return stream;
+    }
+
+    return null;
   }
 
   toggleAudio(enabled: boolean) {
@@ -183,6 +226,26 @@ class WebRTCManager {
       peerConnection.connection.close();
       this.peerConnections.delete(peerId);
     }
+  }
+
+  getAllRemoteStreams(): Map<string, MediaStream> {
+    const streams = new Map<string, MediaStream>();
+    this.peerConnections.forEach((peerConnection, peerId) => {
+      const stream = this.getRemoteStream(peerId);
+      if (stream) {
+        streams.set(peerId, stream);
+      }
+    });
+    return streams;
+  }
+
+  getPeerConnectionState(peerId: string): string {
+    const peerConnection = this.peerConnections.get(peerId);
+    return peerConnection ? peerConnection.connection.connectionState : 'not-found';
+  }
+
+  getLocalStream(): MediaStream | null {
+    return this.localStream;
   }
 
   cleanup() {

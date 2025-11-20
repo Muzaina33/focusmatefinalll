@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { websocketService } from '../services/websocket';
+import { webrtcManager } from '../services/webrtc';
 
 interface Props {
   student: any;
@@ -7,6 +9,10 @@ interface Props {
 }
 
 export default function StudentTile({ student, sessionId, videoFrame }: Props) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasWebRTCStream, setHasWebRTCStream] = useState(false);
+  const [connectionState, setConnectionState] = useState('checking');
+
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'Engaged': return 'text-green-400';
@@ -18,6 +24,44 @@ export default function StudentTile({ student, sessionId, videoFrame }: Props) {
       default: return 'text-gray-400';
     }
   };
+
+  useEffect(() => {
+    // Try to get WebRTC stream for this student
+    const updateStream = () => {
+      const stream = webrtcManager.getRemoteStream(student.id);
+      const state = webrtcManager.getPeerConnectionState(student.id);
+      
+      setConnectionState(state);
+      
+      if (stream && videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setHasWebRTCStream(true);
+        console.log(`✅ WebRTC stream set for student ${student.name}`);
+      } else {
+        setHasWebRTCStream(false);
+      }
+    };
+
+    // Initial check
+    updateStream();
+
+    // Listen for remote stream events
+    const handleRemoteStream = (event: CustomEvent) => {
+      if (event.detail.peerId === student.id) {
+        updateStream();
+      }
+    };
+
+    window.addEventListener('remoteStreamReceived', handleRemoteStream as EventListener);
+
+    // Check periodically for stream updates
+    const interval = setInterval(updateStream, 2000);
+
+    return () => {
+      window.removeEventListener('remoteStreamReceived', handleRemoteStream as EventListener);
+      clearInterval(interval);
+    };
+  }, [student.id, student.name]);
 
   const handleMute = () => {
     websocketService.emit('mute_student', {
@@ -46,7 +90,16 @@ export default function StudentTile({ student, sessionId, videoFrame }: Props) {
     <div className="glass rounded-lg p-4 hover:border-neon-cyan transition-all">
       {/* Video display */}
       <div className="relative aspect-video bg-dark-panel rounded-lg mb-3 overflow-hidden">
-        {videoFrame ? (
+        {hasWebRTCStream ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+            style={{ transform: 'scaleX(-1)' }}
+          />
+        ) : videoFrame ? (
           <img 
             src={videoFrame} 
             alt={student.name}
@@ -56,14 +109,20 @@ export default function StudentTile({ student, sessionId, videoFrame }: Props) {
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-4xl">👤</div>
+            <div className="absolute bottom-2 left-2 text-xs text-gray-500">
+              {connectionState === 'connecting' && '🔄 Connecting...'}
+              {connectionState === 'connected' && '✅ Connected'}
+              {connectionState === 'failed' && '❌ Failed'}
+              {connectionState === 'not-found' && '⏳ Waiting...'}
+            </div>
           </div>
         )}
         <div className="absolute bottom-1 left-1 text-xs text-gray-400 bg-black/70 px-2 py-0.5 rounded">
           {student.name}
         </div>
-        {videoFrame && (
+        {(hasWebRTCStream || videoFrame) && (
           <div className="absolute top-1 right-1 text-xs text-green-400 bg-black/70 px-2 py-0.5 rounded">
-            ● Live
+            ● {hasWebRTCStream ? 'WebRTC' : 'AI Feed'}
           </div>
         )}
       </div>

@@ -20,9 +20,18 @@ export default function TeacherDashboard() {
     if (token && session) {
       const socket = websocketService.connect(token);
       
-      socket.on('student_joined', (data: any) => {
+      socket.on('student_joined', async (data: any) => {
         console.log('Student joined:', data);
         setActivities(prev => [...prev, { type: 'joined', ...data, time: new Date() }]);
+        
+        // Initiate WebRTC connection with the new student
+        try {
+          console.log(`🔄 Initiating WebRTC connection with student ${data.user_id}`);
+          await webrtcManager.createOffer(data.user_id);
+        } catch (error) {
+          console.error('Failed to create WebRTC offer:', error);
+        }
+        
         // Reload students list
         loadStudents();
       });

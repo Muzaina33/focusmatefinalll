@@ -16,7 +16,9 @@ export default function StudentClassroom() {
   const [lockMode, setLockMode] = useState(false);
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
+  const [teacherStream, setTeacherStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const teacherVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (token && session) {
@@ -55,6 +57,22 @@ export default function StudentClassroom() {
         alert('Session has ended');
         leaveClass();
       });
+
+      // Listen for WebRTC remote streams (teacher's video)
+      const handleRemoteStream = (event: CustomEvent) => {
+        console.log('📹 Received teacher stream:', event.detail);
+        const stream = event.detail.stream;
+        setTeacherStream(stream);
+        if (teacherVideoRef.current) {
+          teacherVideoRef.current.srcObject = stream;
+        }
+      };
+
+      window.addEventListener('remoteStreamReceived', handleRemoteStream as EventListener);
+
+      return () => {
+        window.removeEventListener('remoteStreamReceived', handleRemoteStream as EventListener);
+      };
     }
 
     return () => {
@@ -226,11 +244,30 @@ export default function StudentClassroom() {
           {/* Teacher Camera */}
           <div className="glass rounded-xl p-4">
             <h3 className="text-lg font-bold text-white mb-2">Teacher</h3>
-            <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden flex items-center justify-center">
-              <div className="text-6xl">👨‍🏫</div>
-              <div className="absolute bottom-2 left-2 text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
-                Video streaming requires TURN server
-              </div>
+            <div className="relative aspect-video bg-dark-panel rounded-lg overflow-hidden">
+              {teacherStream ? (
+                <video
+                  ref={teacherVideoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-6xl">👨‍🏫</div>
+                </div>
+              )}
+              {teacherStream && (
+                <div className="absolute top-2 right-2 bg-black/70 px-2 py-1 rounded text-xs text-green-400">
+                  ● WebRTC Live
+                </div>
+              )}
+              {!teacherStream && (
+                <div className="absolute bottom-2 left-2 text-xs text-gray-400 bg-black/50 px-2 py-1 rounded">
+                  🔄 Connecting to teacher...
+                </div>
+              )}
             </div>
           </div>
         </div>
