@@ -41,6 +41,12 @@ app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(reports.router)
 
+print("📊 Reports router included successfully")
+print("🔗 Available routes:")
+for route in app.routes:
+    if hasattr(route, 'path'):
+        print(f"  {route.methods} {route.path}")
+
 # Socket.IO server
 sio = socketio.AsyncServer(
     async_mode='asgi',
