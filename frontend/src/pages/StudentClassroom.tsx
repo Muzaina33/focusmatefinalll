@@ -83,13 +83,24 @@ export default function StudentClassroom() {
 
   const joinClass = async () => {
     try {
-      // Get local video stream
-      const stream = await webrtcManager.getLocalStream(true, true);
-      setLocalStream(stream);
+      // Get local video stream with better error handling
+      let stream: MediaStream | null = null;
+      
+      try {
+        console.log('🎥 Requesting camera access...');
+        stream = await webrtcManager.getLocalStream(true, true);
+        console.log('✅ Camera access granted');
+        setLocalStream(stream);
 
-      // Set video source
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        // Set video source
+        if (videoRef.current && stream) {
+          videoRef.current.srcObject = stream;
+          console.log('📹 Video stream set to video element');
+        }
+      } catch (cameraError) {
+        console.error('❌ Camera access failed:', cameraError);
+        alert('Camera access is required for AI monitoring. Please allow camera permission and refresh the page.');
+        return; // Don't continue without camera
       }
 
       // Join room
@@ -198,7 +209,19 @@ export default function StudentClassroom() {
               </div>
 
               <button
-                onClick={joinClass}
+                onClick={async () => {
+                  // Test camera first
+                  try {
+                    console.log('🧪 Testing camera access...');
+                    const testStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    console.log('✅ Camera test successful');
+                    testStream.getTracks().forEach(track => track.stop()); // Clean up test stream
+                    joinClass(); // Proceed with join
+                  } catch (error: any) {
+                    console.error('❌ Camera test failed:', error);
+                    alert(`Camera test failed: ${error.message}\n\nPlease:\n1. Allow camera permission\n2. Close other apps using camera\n3. Refresh page and try again`);
+                  }
+                }}
                 disabled={roomCode.length !== 6}
                 className="w-full px-6 py-3 bg-neon-cyan text-dark-bg font-bold rounded-lg hover:shadow-neon transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >

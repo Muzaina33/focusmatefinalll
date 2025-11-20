@@ -36,14 +36,38 @@ class WebRTCManager {
 
   async getLocalStream(audio: boolean = true, video: boolean = true): Promise<MediaStream> {
     try {
-      this.localStream = await navigator.mediaDevices.getUserMedia({
+      console.log('🎥 Requesting media access:', { audio, video });
+      
+      // Try with ideal constraints first
+      const constraints = {
         audio,
-        video: video ? { width: 1280, height: 720 } : false,
+        video: video ? {
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 },
+          facingMode: 'user'
+        } : false,
+      };
+
+      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('✅ Media access granted:', {
+        audioTracks: this.localStream.getAudioTracks().length,
+        videoTracks: this.localStream.getVideoTracks().length
       });
+      
       return this.localStream;
-    } catch (error) {
-      console.error('Error accessing media devices:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('❌ Error accessing media devices:', error);
+      
+      // Provide specific error messages
+      if (error.name === 'NotAllowedError') {
+        throw new Error('Camera permission denied. Please allow camera access and refresh the page.');
+      } else if (error.name === 'NotFoundError') {
+        throw new Error('No camera found. Please connect a camera and try again.');
+      } else if (error.name === 'NotReadableError') {
+        throw new Error('Camera is being used by another application. Please close other apps and try again.');
+      } else {
+        throw new Error(`Camera error: ${error.message}`);
+      }
     }
   }
 
