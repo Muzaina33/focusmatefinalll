@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     # Use SECRET_KEY from environment, fallback to JWT_SECRET for compatibility
     JWT_SECRET: str = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET") or "your-secret-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days (prevents frequent re-logins)
     
     class Config:
         env_file = ".env"
