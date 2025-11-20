@@ -9,6 +9,11 @@ from datetime import datetime
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
+@router.get("/test")
+async def test_reports():
+    """Test endpoint to verify reports router is working"""
+    return {"message": "Reports router is working!", "status": "ok"}
+
 @router.get("/teacher/{teacher_id}/sessions")
 async def get_teacher_sessions(
     teacher_id: str,
@@ -16,6 +21,9 @@ async def get_teacher_sessions(
     db: Session = Depends(get_db)
 ):
     """Get all sessions for a teacher"""
+    print(f"📊 Reports: Getting sessions for teacher {teacher_id}")
+    print(f"📊 Current user: {current_user.id if current_user else 'None'}")
+    
     if current_user.id != teacher_id:
         raise HTTPException(status_code=403, detail="Not authorized")
     
